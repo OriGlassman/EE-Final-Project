@@ -1,0 +1,85 @@
+plugins {
+    id 'java'
+}
+
+version '1.0'
+compileJava {
+	sourceCompatibility = '1.8'
+	targetCompatibility = '1.8'
+}
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+dependencies {
+    testImplementation "org.junit.jupiter:junit-jupiter-api:5.4.0-M1"
+    testRuntime "org.junit.jupiter:junit-jupiter-engine:5.4.0"
+    compile group: 'javax.mail', name: 'mail', version: '1.4.5'
+    compile group: 'javax.activation', name: 'activation', version: '1.1.1'
+    compile group: 'org.imgscalr', name: 'imgscalr-lib', version: '4.2'
+    compile group: 'net.coobird', name: 'thumbnailator', version: '0.4.1'
+
+    compile group:'org.xerial', name:'sqlite-jdbc', version:'3.8.11.2'
+}
+
+
+sourceSets {
+    main {
+        java {
+            srcDir 'main'
+        }
+    }
+}
+
+
+jar {
+    manifest {
+        if (!configurations.compile.isEmpty()){
+            attributes(
+                    'Class-Path': configurations.compile.collect{it.toURI().toString()}.join(' '),
+                    'Main-Class': 'com.pc.Flow')
+        }
+    }
+    archiveName 'VisualCrypto.jar'
+    destinationDirectory = file('.')
+}
+
+
+task androidJar(type: Jar, description: "Creates the jar code from pc to android") {
+    manifest {
+        attributes(
+                'Main-Class': 'com.pc.Flow',
+                'Class-Path': configurations.compile.collect{it.toPath()}.join(' ') // note the different from toPath to toURI
+        )
+    }
+    archiveName 'pc_to_android.jar'
+    destinationDirectory = file('../mobile/VisualCrypto/app/libs/')
+    from ('main') {
+        include '**/*'
+    } with jar
+}
+
+task cliJar(type: Jar, description: "Creates the Application  Client JAR file.") {
+    manifest {
+        attributes(
+                'Main-Class': 'com.pc.cli.EncodeDecodeCLI',
+                'Class-Path': configurations.compile.collect{it.toURI().toString()}.join(' ')
+        )
+    }
+    archiveName 'cli.jar'
+    destinationDirectory = file('.')
+    from ('main') {
+        include '**/*'
+    } with jar
+}
+
+
+test {
+    useJUnitPlatform()
+
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+}
